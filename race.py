@@ -11,13 +11,8 @@ import matplotlib.patches as mpatches
 ff1.Cache.enable_cache('cache')
 
 
-def get_laps_by_driver(df, driver):
-    return df.loc[df['Driver'] == driver]
-
-
 def get_all_driver_names(df):
     return df['Driver'].unique().tolist()
-
 
 def calculate_race_lap_times(df):
     # Get the indices of rows whose "LapTime" is null
