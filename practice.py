@@ -35,7 +35,7 @@ def plot_tyre_model(df, model=None, axes=None, row=0, column=0):
 
     if axes is not None:
         subplot = df.plot(kind='scatter', x='TyreLife', y='LapTime',
-                          title=df['Driver'].unique().tolist()[0], ax=axes[row, column])
+                          title=df['Driver'].unique().tolist()[0], ax=axes[row, column], figsize=(25, 18))
         # Plot the line
         if model is not None:
             axes[row, column].plot(polyline, model(polyline))
