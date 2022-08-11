@@ -32,52 +32,85 @@ def get_tyre_model(df):
     return None
 
 
-def plot_tyre_model(df, model=None, axes=None, row=0, column=0):
+def plot_tyre_model(df, model=None, axes=None, size=None, row=0, column=0, color='#1f77b4',
+                    remove_outlier=True):
     # Get the range of the regression line wanted
     m = df.TyreLife.min()
     M = df.TyreLife.max()
-    # The third parameter is the number of samples, set it to double of the laps
-    polyline = np.linspace(m, M, int((M - m) * 2))
+
+    if size[0] == 1:
+        axs = axes[column]
+    else:
+        axs = axes[row, column]
+
+    if remove_outlier:
+        outlier_indices = np.abs(stats.zscore(df.LapTime)) >= 1
+    else:
+        outlier_indices = np.zeros(df.shape[0], dtype=bool)
+    # print(outlier_indices)
 
     if axes is not None:
-        subplot = df.plot(kind='scatter', x='TyreLife', y='LapTime',
-                          title=df['Driver'].unique().tolist()[0], ax=axes[row, column],
-                          figsize=(25, 18))
+        subplot = df[~outlier_indices].plot(kind='scatter', x='TyreLife', y='LapTime',
+                                            title=df['Driver'].unique().tolist()[0],
+                                            ax=axs,
+                                            figsize=(25, 18), color=color)
+        subplot = df[outlier_indices].plot(kind='scatter', x='TyreLife', y='LapTime',
+                                           title=df['Driver'].unique().tolist()[0],
+                                           ax=axs,
+                                           figsize=(25, 18), color='red')
         # Plot the line
         if model is not None:
-            axes[row, column].plot(polyline, model(polyline))
+            # The third parameter is the number of samples, set it to double of the laps
+            polyline = np.linspace(m, M, int((M - m) * 2))
+            axs.plot(polyline, model(polyline))
     else:
-        subplot = df.plot(kind='scatter', x='TyreLife', y='LapTime',
-                          title=df['Driver'].unique().tolist()[0])
+        subplot = df[~outlier_indices].plot(kind='scatter', x='TyreLife', y='LapTime',
+                                            title=df['Driver'].unique().tolist()[0], color=color)
+        subplot = df[outlier_indices].plot(kind='scatter', x='TyreLife', y='LapTime',
+                                           title=df['Driver'].unique().tolist()[0], color='red')
         # Plot the line
         if model is not None:
+            # The third parameter is the number of samples, set it to double of the laps
+            polyline = np.linspace(m, M, int((M - m) * 2))
             plt.plot(polyline, model(polyline))
 
     return subplot
 
+def get_number_of_valid_laps(df):
+    return df.loc[df['LapTime'].notnull()].shape[0]
 
-def plot_tyre_model_all_drivers(df, tyre):
+
+def plot_dry_tyre_models_all_drivers(df, drivers):
     # Make a subplot
-    fig, axs = plt.subplots(5, 4)
-    fig.subplots_adjust(hspace=0.4)
-    fig.suptitle('Long Run Race Pace (' + tyre.capitalize() + ' Tires)')
+    fig, axs = plt.subplots(len(drivers), 3)
+    fig.suptitle('Long Run Race Pace')
 
-    drivers = get_all_driver_names(df)
     for i in range(len(drivers)):
-        # Only pick representative laps - laps that are set under green flag and not in/out laps
-        fp2_representative_laps = df.pick_driver(
-            drivers[i]).pick_accurate().pick_wo_box().pick_track_status('1')
+        for j in range(len(DRY_TYRES)):
+            # Only pick representative laps - laps that are set under green flag and not in/out laps
+            rep_laps = df.pick_driver(drivers[i]).pick_accurate().pick_wo_box().pick_track_status(
+                '1')
 
-        # Convert laptime from timedelta to seconds for plotting
-        convert_laptime_to_seconds(fp2_representative_laps)
+            # Convert laptime from timedelta to seconds for plotting
+            convert_laptime_to_seconds(rep_laps)
 
-        # Consider only medium
-        fp2_representative_laps_medium = fp2_representative_laps.pick_tyre(MEDIUM)
+            rep_laps_by_tyre = rep_laps.pick_tyre(DRY_TYRES[j])
 
-        remove_outlier_laps(fp2_representative_laps_medium)
+            if get_number_of_valid_laps(rep_laps_by_tyre) > 4:
+                remove_outlier_laps(rep_laps_by_tyre)
 
-        model = get_tyre_model(fp2_representative_laps_medium)
-        if (fp2_representative_laps_medium.shape[0] > 0):
-            plot_tyre_model(fp2_representative_laps_medium, model, axs, i // 4, i % 4)
-        else:
-            axs[i // 4, i % 4].title.set_text(drivers[i])
+            if get_number_of_valid_laps(rep_laps_by_tyre) > 3:
+
+                model = get_tyre_model(rep_laps_by_tyre)
+                plot_tyre_model(rep_laps.pick_tyre(DRY_TYRES[j]), model=model, axes=axs,
+                                size=(len(drivers), 3), row=i, column=j)
+
+            elif get_number_of_valid_laps(rep_laps_by_tyre) > 0:
+                plot_tyre_model(rep_laps.pick_tyre(DRY_TYRES[j]), None, axs, (len(drivers), 3), i,
+                                j, 'red', False)
+
+            else:
+                if len(drivers) == 1:
+                    axs[j].title.set_text(drivers[i])
+                else:
+                    axs[i, j].title.set_text(drivers[i])
