@@ -15,6 +15,8 @@ MEDIUM = 'MEDIUM'
 HARD = 'HARD'
 INTERMEDIATE = 'INTERMEDIATE'
 WET = 'WET'
+DRY_TYRES = [SOFT, MEDIUM, HARD]
+WET_TYRES = [INTERMEDIATE, WET]
 
 # Set the mapping for plot legend labels
 SOFT_PATCHES = mpatches.Patch(color='red', label='Soft')
