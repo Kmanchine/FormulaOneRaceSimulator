@@ -76,6 +76,7 @@ def plot_tyre_model(df, model=None, axes=None, size=None, row=0, column=0, color
 
     return subplot
 
+
 def get_number_of_valid_laps(df):
     return df.loc[df['LapTime'].notnull()].shape[0]
 
@@ -114,3 +115,46 @@ def plot_dry_tyre_models_all_drivers(df, drivers):
                     axs[j].title.set_text(drivers[i])
                 else:
                     axs[i, j].title.set_text(drivers[i])
+
+
+def extract_long_run_pace_from_longest_practice_stint(df, driver):
+    """Extract the long run race pace from the longest stint in FP2.
+
+    df: FP2.laps
+    driver: String of the driver initials
+    """
+    df = df.pick_driver(driver).pick_accurate()
+
+    stints = []
+    longest_stint_index = -1
+    longest_stint_length = -1
+
+    for i in df.Stint.unique():
+        current_stint = df.loc[df.Stint == i]
+        stints.append(current_stint)
+
+        # Find longest stint
+        current_stint_length = current_stint.shape[0]
+        if longest_stint_length <= current_stint.shape[0]:
+            longest_stint_index = len(stints) - 1
+            longest_stint_length = current_stint_length
+
+    longest_stint_df = stints[longest_stint_index].copy()
+    convert_laptime_to_seconds(longest_stint_df)
+
+    longest_stint_laptime_df = longest_stint_df['LapTime']
+    longest_stint_laptime_diff_df = longest_stint_laptime_df.diff()
+
+    while sum(longest_stint_laptime_diff_df.loc[abs(longest_stint_laptime_df.diff()) > 1]) > 0:
+        smallest_index = \
+            longest_stint_laptime_diff_df.loc[abs(longest_stint_laptime_df.diff()) > 1].index[0]
+
+        # TODO: Remove the slower lap.
+        time_delta = longest_stint_laptime_diff_df.loc[smallest_index]
+
+        longest_stint_laptime_df.drop(smallest_index, inplace=True)
+        longest_stint_laptime_diff_df.drop(smallest_index, inplace=True)
+
+        longest_stint_laptime_diff_df = longest_stint_laptime_df.diff()
+
+    return (longest_stint_laptime_df.tolist(), longest_stint_df.Compound.unique()[0])
