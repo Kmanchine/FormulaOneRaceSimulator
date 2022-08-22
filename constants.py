@@ -31,3 +31,5 @@ TYRES_COLOR_DICT = {"SOFT": "red", "MEDIUM": "#FFC000", "HARD": "white", "INTERM
                  "WET": "blue"}
 
 TYRE_DEGRADATION_REGRESSION_DEGREE = 2
+
+QUALIFYING_SESSIONS = ['Q1', 'Q2', 'Q3']
