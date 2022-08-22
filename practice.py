@@ -47,7 +47,6 @@ def plot_tyre_model(df, model=None, axes=None, size=None, row=0, column=0, color
         outlier_indices = np.abs(stats.zscore(df.LapTime)) >= 1
     else:
         outlier_indices = np.zeros(df.shape[0], dtype=bool)
-    # print(outlier_indices)
 
     if axes is not None:
         subplot = df[~outlier_indices].plot(kind='scatter', x='TyreLife', y='LapTime',
@@ -134,6 +133,7 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
         stints.append(current_stint)
 
         # Find longest stint
+        # TODO: We pick the later stint as reference if two are the same length.
         current_stint_length = current_stint.shape[0]
         if longest_stint_length <= current_stint.shape[0]:
             longest_stint_index = len(stints) - 1
@@ -149,11 +149,27 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
         smallest_index = \
             longest_stint_laptime_diff_df.loc[abs(longest_stint_laptime_df.diff()) > 1].index[0]
 
-        # TODO: Remove the slower lap.
         time_delta = longest_stint_laptime_diff_df.loc[smallest_index]
+        if time_delta > 0:
+            longest_stint_laptime_df.drop(smallest_index, inplace=True)
+        else:
+            # Since the indices are not continuous, smallest_index - 1 may be invalid.
+            # e.g. longest_stint_laptime_df.drop(smallest_index - 1, inplace=True) does NOT work.
+            # longest_stint_laptime_diff_df.drop(smallest_index - 1, inplace=True)
+            # In this case, split the dataframe and reconstruct it.
 
-        longest_stint_laptime_df.drop(smallest_index, inplace=True)
-        longest_stint_laptime_diff_df.drop(smallest_index, inplace=True)
+            # Since we are using slicing operation here, we cannot use smallest_index directly since
+            # smallest_index is the index of the row, but not the row number, which is used for
+            # slicing. Instead we can do the following:
+            wanted_index = longest_stint_laptime_df.index.get_loc(smallest_index)
+            longest_stint_laptime_df_upper_half = longest_stint_laptime_df.iloc[:wanted_index]
+            longest_stint_laptime_df_lower_half = longest_stint_laptime_df.iloc[wanted_index:]
+
+            # Drop the last row of the upper half, which holds the slower lap
+            longest_stint_laptime_df_upper_half = longest_stint_laptime_df_upper_half[:-1]
+
+            longest_stint_laptime_df = pd.concat([longest_stint_laptime_df_upper_half,
+                                                  longest_stint_laptime_df_lower_half])
 
         longest_stint_laptime_diff_df = longest_stint_laptime_df.diff()
 
