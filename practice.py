@@ -125,6 +125,7 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
     df = df.pick_driver(driver).pick_accurate()
 
     stints = []
+    longest_stint_tyrelife_df = []
     longest_stint_index = -1
     longest_stint_length = -1
 
@@ -133,11 +134,12 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
         stints.append(current_stint)
 
         # Find longest stint
-        # TODO: We pick the later stint as reference if two are the same length.
+        # We pick the later stint as reference if two are the same length.
         current_stint_length = current_stint.shape[0]
         if longest_stint_length <= current_stint.shape[0]:
             longest_stint_index = len(stints) - 1
             longest_stint_length = current_stint_length
+            longest_stint_tyrelife_df = df[df['Stint'] == i].TyreLife.tolist()
 
     longest_stint_df = stints[longest_stint_index].copy()
     convert_laptime_to_seconds(longest_stint_df)
@@ -151,6 +153,7 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
 
         time_delta = longest_stint_laptime_diff_df.loc[smallest_index]
         if time_delta > 0:
+            longest_stint_tyrelife_df.pop(longest_stint_laptime_df.index.get_loc(smallest_index))
             longest_stint_laptime_df.drop(smallest_index, inplace=True)
         else:
             # Since the indices are not continuous, smallest_index - 1 may be invalid.
@@ -171,6 +174,8 @@ def extract_long_run_pace_from_longest_practice_stint(df, driver):
             longest_stint_laptime_df = pd.concat([longest_stint_laptime_df_upper_half,
                                                   longest_stint_laptime_df_lower_half])
 
+            longest_stint_tyrelife_df.pop(longest_stint_laptime_df.index.get_loc(smallest_index))
+
         longest_stint_laptime_diff_df = longest_stint_laptime_df.diff()
 
-    return (longest_stint_laptime_df.tolist(), longest_stint_df.Compound.unique()[0])
+    return (longest_stint_laptime_df.tolist(), longest_stint_df.Compound.unique()[0], longest_stint_tyrelife_df)
