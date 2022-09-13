@@ -38,3 +38,10 @@ QUALIFYING_SESSIONS = ['Q1', 'Q2', 'Q3']
 TEAMMATE_PAIRS_DICT = {'RUS': 'HAM', 'VER': 'PER', 'MSC': 'MAG', 'BOT': 'ZHO', 'RIC': 'NOR',
                        'STR': 'VET', 'ALB': 'LAT', 'TSU': 'GAS', 'OCO': 'ALO', 'SAI': 'LEC'}
 TEAMMATE_PAIRS_DICT.update({v: k for k, v in TEAMMATE_PAIRS_DICT.items()})
+
+
+# Constants for determining driver performance
+TEAMMATE_MAX_GAP_SECOND = 1
+QUALIFYING_MAX_GAP_PERCENTAGE = 1.02
+FP2_MAX_GAP_PERCENTAGE = 1.03
+MAX_GAP_VALUE = 20
