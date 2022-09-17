@@ -74,7 +74,8 @@ def get_head_to_head_df(fp2_df, quali_df):
         laps = np.array(laps)
 
         if len(laps) > 2:
-            popt, pcov, model = laptime_model(laps, laptimes, trackwear)
+            # TODO: check parameters when function is refined.
+            popt, pcov, model = laptime_model(laps, laptimes, MEDIUM)
             teammates_h2h.loc[teammates_h2h['Driver'] == driver, 'BaseTime'] = popt[0]
         else:
             teammates_h2h.loc[teammates_h2h['Driver'] == driver, 'BaseTime'] = 10000
