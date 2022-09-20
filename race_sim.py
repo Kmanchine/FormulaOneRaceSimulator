@@ -14,7 +14,9 @@ from scipy.optimize import curve_fit
 ff1.Cache.enable_cache('cache')
 
 
-def tyre_degradation_model(x, compound):
+def tyre_degradation_model(x, compound, degfactor=1):
+    x = x / degfactor
+
     if compound == SOFT:
         return 0.0025 * x ** 2 + 0.05 * x - 1.5
     elif compound == MEDIUM:
@@ -22,18 +24,10 @@ def tyre_degradation_model(x, compound):
     else:
         return 0.00007 * x ** 2 + 0.01 * x + 0
 
-def laptime_model(lap_numbers, lap_times, compound):
 
+def laptime_model(lap_numbers, lap_times, compound):
     def tyre_degradation_model_beta(x, beta):
         return tyre_degradation_model(x, compound) + beta
-        # if compound == SOFT:
-        #     return 0.0025 * x ** 2 + 0.05 * x - 1.5 + beta
-        # elif compound == MEDIUM:
-        #     return 0.0008333 * x ** 2 + 0.01 * x - 0.4 + beta
-        # else:
-        #     return 0.00007 * x ** 2 + 0.01 * x + 0 + beta
-
-
 
     popt, pcov = curve_fit(tyre_degradation_model_beta, lap_numbers, lap_times)
     return (popt, pcov, tyre_degradation_model)
