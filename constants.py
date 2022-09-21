@@ -1,10 +1,7 @@
 """
-Contains constants for analysing a Fomrula 1 weekend.
+Contains constants for analysing a Formula 1 weekend.
 """
 import fastf1 as ff1
-import pandas as pd
-from matplotlib import pyplot as plt
-import numpy as np
 import matplotlib.patches as mpatches
 # Enable the cache by providing the name of the cache folder
 ff1.Cache.enable_cache('cache')
@@ -38,7 +35,6 @@ QUALIFYING_SESSIONS = ['Q1', 'Q2', 'Q3']
 TEAMMATE_PAIRS_DICT = {'RUS': 'HAM', 'VER': 'PER', 'MSC': 'MAG', 'BOT': 'ZHO', 'RIC': 'NOR',
                        'STR': 'VET', 'ALB': 'LAT', 'TSU': 'GAS', 'OCO': 'ALO', 'SAI': 'LEC'}
 TEAMMATE_PAIRS_DICT.update({v: k for k, v in TEAMMATE_PAIRS_DICT.items()})
-
 
 # Constants for determining driver performance
 TEAMMATE_MAX_GAP_SECOND = 1
